@@ -1,50 +1,49 @@
 const express = require("express");
-const jwt = require("jsonwebtoken");
 require("dotenv").config();
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 const app = express();
-
-// 👇 MUST be here
 app.use(express.json());
 
-const users = [];
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-// Register
-app.post("/auth/register", (req, res) => {
-  const { username, password } = req.body;
+app.post("/analyze", async (req, res) => {
+  const { description } = req.body;
 
-  if (!username || !password) {
-    return res.status(400).json({ message: "Missing fields" });
+  if (!description) {
+    return res.status(400).json({ message: "Description required" });
   }
 
-  users.push({ username, password });
-  res.status(201).json({ message: "User registered" });
-});
+  try {
+    const prompt = `
+Classify the difficulty of the following task as exactly one word:
+Easy, Medium, or Hard.
 
-// Login
-app.post("/auth/login", (req, res) => {
-  const { username, password } = req.body;
+Task:
+"${description}"
 
-  const user = users.find(
-    (u) => u.username === username && u.password === password
-  );
+Respond with only one word.
+`;
 
-  if (!user) {
-    return res.status(401).json({ message: "Invalid credentials" });
+    const result = await model.generateContent(prompt);
+    const text = result.response.text().trim();
+
+    let difficulty = "Easy";
+    if (text.includes("Hard")) difficulty = "Hard";
+    else if (text.includes("Medium")) difficulty = "Medium";
+
+    res.json({ difficulty });
+  } catch (err) {
+    console.error("Gemini error:", err.message);
+    res.json({ difficulty: "Medium" }); // fallback
   }
-
-  const token = jwt.sign({ username }, process.env.JWT_SECRET, {
-    expiresIn: "1h",
-  });
-
-  res.json({ token });
 });
 
-// Health
 app.get("/health", (req, res) => {
-  res.json({ status: "Auth Service running" });
+  res.json({ status: "AI Service running with Gemini" });
 });
 
-app.listen(4001, () => {
-  console.log("Auth Service running on port 4001");
+app.listen(4003, () => {
+  console.log("AI Service running on port 4003");
 });
