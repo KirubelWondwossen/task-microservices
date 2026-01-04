@@ -1,19 +1,17 @@
-require("dotenv").config();
 const express = require("express");
-const connectDB = require("./config/db");
-
+require("dotenv").config();
+const mongoose = require("mongoose");
 const taskRoutes = require("./routes/taskRoutes");
 
 const app = express();
-
-connectDB();
-
 app.use(express.json());
-app.use("/tasks", taskRoutes);
 
-app.get("/health", (req, res) => {
-  res.json({ status: "Task Service running" });
-});
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => console.log("MongoDB connected (Task Service)"))
+  .catch(console.error);
+
+app.use("/tasks", taskRoutes); // ← REQUIRED
 
 app.listen(4002, () => {
   console.log("Task Service running on port 4002");

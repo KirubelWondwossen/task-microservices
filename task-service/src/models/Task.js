@@ -2,19 +2,10 @@ const mongoose = require("mongoose");
 
 const taskSchema = new mongoose.Schema(
   {
-    title: {
-      type: String,
-      required: true,
-    },
-    description: String,
-    difficulty: {
-      type: String,
-      enum: ["Easy", "Medium", "Hard"],
-    },
-    owner: {
-      type: String,
-      required: true,
-    },
+    title: { type: String, required: true },
+    description: { type: String, required: true },
+    difficulty: { type: String, required: true },
+    owner: { type: String, required: true },
   },
   { timestamps: true }
 );

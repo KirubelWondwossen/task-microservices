@@ -1,16 +1,23 @@
 const express = require("express");
 const axios = require("axios");
-const authMiddleware = require("../middleware/authMiddleware");
 const Task = require("../models/Task");
+const authMiddleware = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
-// Create task (protected)
+/**
+ * POST /tasks
+ * Create task → AI decides difficulty
+ */
 router.post("/", authMiddleware, async (req, res) => {
   const { title, description } = req.body;
 
+  if (!title || !description) {
+    return res.status(400).json({ message: "Missing fields" });
+  }
+
   try {
-    // Call AI Service
+    // 🔥 Call AI Service
     const aiResponse = await axios.post("http://localhost:4003/analyze", {
       description,
     });
@@ -26,8 +33,8 @@ router.post("/", authMiddleware, async (req, res) => {
 
     res.status(201).json(task);
   } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ message: "Task creation failed" });
+    console.error("Task creation error:", err.message);
+    res.status(500).json({ message: "Failed to create task" });
   }
 });
 
