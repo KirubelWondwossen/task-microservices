@@ -1,12 +1,14 @@
-const express = require("express");
 require("dotenv").config();
+const express = require("express");
+const connectDB = require("./config/db");
 
 const taskRoutes = require("./routes/taskRoutes");
 
 const app = express();
 
-app.use(express.json());
+connectDB();
 
+app.use(express.json());
 app.use("/tasks", taskRoutes);
 
 app.get("/health", (req, res) => {
